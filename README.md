@@ -9,6 +9,14 @@ Unifies audit logs from multiple sources into **6 OCSF IAM tables** for cross-pl
 **Problem**: Schema chaos, duplicate data, 100+ tables, pipeline jungles  
 **Solution**: 6 unified tables, single source of truth, one query across all sources
 
+## 🏗️ Pipeline Architecture
+
+![Pipeline Architecture](_images/pipeline-architecture.png)
+
+*Pipeline output using sample audit log files from `_raw_logs/` folder*
+
+**15 Append Flows** → **6 Unified OCSF Tables** | All streaming tables ✅
+
 ## 📂 Repository Structure
 
 ```
@@ -54,10 +62,6 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 
 **OCSF Version**: 1.3.0 | **Category**: IAM (UID 3) | **Docs**: https://schema.ocsf.io/
 
-## 🔑 Tech Stack
-
-Databricks • Spark Declarative Pipelines • Spark Streaming • Auto Loader • Delta Lake • Unity Catalog • OCSF v1.3.0
-
 ---
 
-**Built with 💜 using OCSF, Databricks, Spark Declarative Pipelines, Spark Streaming, Auto Loader, and Delta Lake**
+**Tech Stack Built with 💜**: OCSF • Databricks 🚀 • Spark Declarative Pipelines • Spark Streaming • Auto Loader • Delta Lake • Unity Catalog
