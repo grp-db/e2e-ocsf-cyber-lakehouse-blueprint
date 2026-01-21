@@ -11,7 +11,7 @@ Unifies audit logs from multiple sources into **6 OCSF IAM tables** for cross-pl
 
 ## 🏗️ Pipeline Architecture
 
-![Pipeline Architecture](_images/pipeline-architecture.png)
+![Pipeline Architecture](_images/pipeline_graph.png)
 
 *Pipeline output using sample audit log files from `_raw_logs/` folder*
 
