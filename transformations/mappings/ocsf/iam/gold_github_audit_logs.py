@@ -23,7 +23,7 @@ def transform_github_to_account_change(df):
     """
     GitHub user lifecycle events → OCSF Account Change (3001)
     Actions: org.add_member, team.add_member/remove_member, repo.add_member/update_member/remove_member
-    Schema: https://schema.ocsf.io/1.3.0/classes/account_change
+    Schema: https://schema.ocsf.io/1.7.0/classes/account_change
     """
     return (
         df
@@ -78,7 +78,7 @@ def transform_github_to_account_change(df):
                 END,
                 ': ', COALESCE(target_login, user, actor)
             ) as message""",
-            "named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING)) as actor",
+            "named_struct('user', named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING))) as actor",
             "named_struct('uid', COALESCE(target_login, user), 'name', COALESCE(target_login, user), 'type', 'User', 'type_id', 1, 'email_addr', CAST(NULL AS STRING), 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) as user",
             """array(
                 named_struct('name', 'actor', 'type', 'User Name', 'type_id', 4, 'value', actor),
@@ -97,7 +97,7 @@ def transform_github_to_authentication(df):
     """
     GitHub login/logout events → OCSF Authentication (3002)
     Actions: user.login, user.logout, oauth_authorization.create, oauth_authorization.destroy
-    Schema: https://schema.ocsf.io/1.3.0/classes/authentication
+    Schema: https://schema.ocsf.io/1.7.0/classes/authentication
     """
     return (
         df
@@ -127,11 +127,20 @@ def transform_github_to_authentication(df):
             "CASE WHEN action LIKE '%failed%' THEN 2 ELSE 1 END as status_id",
             "CASE WHEN action LIKE '%failed%' THEN 'Failure' ELSE 'Success' END as status",
             "CAST(_event_time AS TIMESTAMP) as time",
-            "named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING)) as actor",
+            "named_struct('user', named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING))) as actor",
             """named_struct(
                 'ip', actor_ip,
                 'location', named_struct('city', actor_city, 'region', actor_region, 'country', actor_country, 'coordinates', CAST(NULL AS ARRAY<DOUBLE>))
             ) as src_endpoint""",
+            """CASE 
+                WHEN action LIKE '%oauth%' THEN 'OAuth'
+                ELSE 'Password'
+            END as auth_protocol""",
+            """CASE 
+                WHEN action LIKE '%oauth%' THEN 2
+                ELSE 1
+            END as auth_protocol_id""",
+            "named_struct('hostname', 'github.com', 'name', 'GitHub') as dst_endpoint",
             """array(
                 named_struct('name', 'actor', 'type', 'User Name', 'type_id', 4, 'value', actor),
                 named_struct('name', 'src_ip', 'type', 'IP Address', 'type_id', 2, 'value', actor_ip)
@@ -149,7 +158,7 @@ def transform_github_to_authorize_session(df):
     """
     GitHub repo access/permissions → OCSF Authorize Session (3003)
     Actions: repo.access, repo.add_member, repo.remove_member, protected_branch operations
-    Schema: https://schema.ocsf.io/1.3.0/classes/authorize_session
+    Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (
         df
@@ -179,7 +188,7 @@ def transform_github_to_authorize_session(df):
             "1 as status_id",
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
-            "named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING)) as actor",
+            "named_struct('user', named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING))) as actor",
             """named_struct(
                 'uid', COALESCE(repository, organization),
                 'name', COALESCE(repository, organization),
@@ -206,7 +215,7 @@ def transform_github_to_user_access_management(df):
     """
     GitHub org member management → OCSF User Access Management (3005)
     Actions: org.add_member, org.remove_member, org.update_member, org.add_billing_manager
-    Schema: https://schema.ocsf.io/1.3.0/classes/user_access_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/user_access_management
     """
     return (
         df
@@ -236,7 +245,7 @@ def transform_github_to_user_access_management(df):
             "1 as status_id",
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
-            "named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING)) as actor",
+            "named_struct('user', named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING))) as actor",
             "named_struct('uid', COALESCE(target_login, user), 'name', COALESCE(target_login, user), 'type', 'User', 'type_id', 1, 'email_addr', CAST(NULL AS STRING), 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) as user",
             "named_struct('uid', organization, 'name', organization, 'type', 'Organization', 'owner', named_struct('name', organization), 'data', CAST(NULL AS MAP<STRING, STRING>)) as resource",
             "CASE WHEN permission IS NOT NULL THEN array(permission) ELSE array('member') END as privileges",
@@ -257,7 +266,7 @@ def transform_github_to_group_management(df):
     """
     GitHub team operations → OCSF Group Management (3006)
     Actions: team.add_member, team.remove_member, team.create, team.destroy
-    Schema: https://schema.ocsf.io/1.3.0/classes/group_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/group_management
     """
     return (
         df
@@ -293,7 +302,7 @@ def transform_github_to_group_management(df):
             "1 as status_id",
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
-            "named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING)) as actor",
+            "named_struct('user', named_struct('uid', actor, 'name', actor, 'type', 'User', 'type_id', 1, 'email_addr', email, 'domain', organization, 'uid_alt', CAST(NULL AS STRING))) as actor",
             "named_struct('uid', team, 'name', team, 'type', 'Team') as `group`",
             "CASE WHEN target_login IS NOT NULL THEN named_struct('uid', target_login, 'name', target_login, 'type', 'User', 'type_id', 1, 'email_addr', CAST(NULL AS STRING), 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",
             """array(

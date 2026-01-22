@@ -25,7 +25,7 @@ def transform_atlassian_to_account_change(df):
     """
     Atlassian user lifecycle events → OCSF Account Change (3001)
     Actions: user.created, user.deleted, user.updated, user.deactivated, user.2fa_enabled, api_key.*, token.*
-    Schema: https://schema.ocsf.io/1.3.0/classes/account_change
+    Schema: https://schema.ocsf.io/1.7.0/classes/account_change
     """
     return (
         df
@@ -67,13 +67,15 @@ def transform_atlassian_to_account_change(df):
             "CAST(_event_time AS TIMESTAMP) as time",
             "message_content as message",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
-                'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', CAST(NULL AS STRING),
-                'uid_alt', actor_link
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
+                    'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', CAST(NULL AS STRING),
+                    'uid_alt', actor_link
+                )
             ) as actor""",
             "named_struct('uid', actor_id, 'name', actor_name, 'type', 'User', 'type_id', 1, 'email_addr', actor_email, 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) as user",
             """array(
@@ -99,7 +101,7 @@ def transform_atlassian_to_authentication(df):
     """
     Atlassian login/logout events → OCSF Authentication (3002)
     Actions: user.login, user.login_failed, user.logout, user.session_ended
-    Schema: https://schema.ocsf.io/1.3.0/classes/authentication
+    Schema: https://schema.ocsf.io/1.7.0/classes/authentication
     """
     return (
         df
@@ -134,12 +136,15 @@ def transform_atlassian_to_authentication(df):
             "CASE WHEN action LIKE '%failed%' THEN 'Failure' ELSE 'Success' END as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', 'User',
-                'type_id', 1,
-                'email_addr', actor_email,
-                'uid_alt', actor_link
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', 'User',
+                    'type_id', 1,
+                    'email_addr', actor_email,
+                    'domain', CAST(NULL AS STRING),
+                    'uid_alt', actor_link
+                )
             ) as actor""",
             """named_struct(
                 'ip', location_ip,
@@ -152,6 +157,17 @@ def transform_atlassian_to_authentication(df):
                 ),
                 'agent', user_agent
             ) as src_endpoint""",
+            """CASE 
+                WHEN auth_type LIKE '%sso%' THEN 'SAML'
+                WHEN auth_type = 'api-token' THEN 'API Key'
+                ELSE 'Password'
+            END as auth_protocol""",
+            """CASE 
+                WHEN auth_type LIKE '%sso%' THEN 4
+                WHEN auth_type = 'api-token' THEN 99
+                ELSE 1
+            END as auth_protocol_id""",
+            "named_struct('hostname', 'atlassian.com', 'name', 'Atlassian') as dst_endpoint",
             """array(
                 named_struct('name', 'actor_id', 'type', 'User Name', 'type_id', 4, 'value', actor_id),
                 named_struct('name', 'actor_email', 'type', 'Email Address', 'type_id', 5, 'value', actor_email),
@@ -173,7 +189,7 @@ def transform_atlassian_to_authorize_session(df):
     """
     Atlassian permission/role operations → OCSF Authorize Session (3003)
     Actions: permission.granted, permission.revoked, role.assigned, role.removed, organization.sso_enabled
-    Schema: https://schema.ocsf.io/1.3.0/classes/authorize_session
+    Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (
         df
@@ -212,13 +228,15 @@ def transform_atlassian_to_authorize_session(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
-                'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', CAST(NULL AS STRING),
-                'uid_alt', actor_link
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
+                    'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', CAST(NULL AS STRING),
+                    'uid_alt', actor_link
+                )
             ) as actor""",
             "CASE WHEN tags IS NOT NULL THEN array(tags) ELSE CAST(NULL AS ARRAY<STRING>) END as privileges",
             """array(
@@ -243,7 +261,7 @@ def transform_atlassian_to_entity_management(df):
     """
     Atlassian workspace/project management → OCSF Entity Management (3004)
     Actions: workspace.created, workspace.deleted, project.created, project.deleted, webhook.*
-    Schema: https://schema.ocsf.io/1.3.0/classes/entity_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/entity_management
     """
     return (
         df
@@ -279,13 +297,15 @@ def transform_atlassian_to_entity_management(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
-                'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', CAST(NULL AS STRING),
-                'uid_alt', actor_link
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
+                    'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', CAST(NULL AS STRING),
+                    'uid_alt', actor_link
+                )
             ) as actor""",
             """named_struct(
                 'uid', event_id,
@@ -322,7 +342,7 @@ def transform_atlassian_to_group_management(df):
     """
     Atlassian group operations → OCSF Group Management (3006)
     Actions: group.member_added, group.member_removed, group.created, group.deleted
-    Schema: https://schema.ocsf.io/1.3.0/classes/group_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/group_management
     """
     return (
         df
@@ -359,13 +379,15 @@ def transform_atlassian_to_group_management(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
-                'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', CAST(NULL AS STRING),
-                'uid_alt', actor_link
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN auth_type = 'api-token' THEN 'System' ELSE 'User' END,
+                    'type_id', CASE WHEN auth_type = 'api-token' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', CAST(NULL AS STRING),
+                    'uid_alt', actor_link
+                )
             ) as actor""",
             "named_struct('uid', event_id, 'name', 'Group', 'type', 'Group') as `group`",
             "CASE WHEN action LIKE '%member%' THEN named_struct('uid', actor_id, 'name', actor_name, 'type', 'User', 'type_id', 1, 'email_addr', actor_email, 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",

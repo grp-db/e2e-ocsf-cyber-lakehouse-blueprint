@@ -23,7 +23,7 @@ def transform_slack_to_account_change(df):
     """
     Slack user lifecycle events → OCSF Account Change (3001)
     Actions: user_created, user_deactivated, user_reactivated, user_role_changed, user_email_changed
-    Schema: https://schema.ocsf.io/1.3.0/classes/account_change
+    Schema: https://schema.ocsf.io/1.7.0/classes/account_change
     """
     return (
         df
@@ -75,13 +75,15 @@ def transform_slack_to_account_change(df):
                 ' for user ', entity_name
             ) as message""",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
-                'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', location_domain,
-                'uid_alt', CAST(NULL AS STRING)
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
+                    'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', location_domain,
+                    'uid_alt', CAST(NULL AS STRING)
+                )
             ) as actor""",
             "CASE WHEN entity_type = 'user' THEN named_struct('uid', entity_id, 'name', entity_name, 'type', 'User', 'type_id', 1, 'email_addr', CAST(NULL AS STRING), 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",
             """array(
@@ -100,7 +102,7 @@ def transform_slack_to_authentication(df):
     """
     Slack login/logout events → OCSF Authentication (3002)
     Actions: user_login, user_logout, user_login_failed
-    Schema: https://schema.ocsf.io/1.3.0/classes/authentication
+    Schema: https://schema.ocsf.io/1.7.0/classes/authentication
     """
     return (
         df
@@ -131,18 +133,24 @@ def transform_slack_to_authentication(df):
             "CASE WHEN action LIKE '%failed%' THEN 'Failure' ELSE 'Success' END as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', 'User',
-                'type_id', 1,
-                'email_addr', actor_email,
-                'domain', location_domain
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', 'User',
+                    'type_id', 1,
+                    'email_addr', actor_email,
+                    'domain', location_domain,
+                    'uid_alt', CAST(NULL AS STRING)
+                )
             ) as actor""",
             """named_struct(
                 'ip', ip_address,
                 'session', named_struct('uid', session_id),
                 'agent', user_agent
             ) as src_endpoint""",
+            "'Password' as auth_protocol",
+            "1 as auth_protocol_id",
+            "named_struct('hostname', CONCAT(location_domain, '.slack.com'), 'name', 'Slack') as dst_endpoint",
             """array(
                 named_struct('name', 'actor_id', 'type', 'User Name', 'type_id', 4, 'value', actor_id),
                 named_struct('name', 'src_ip', 'type', 'IP Address', 'type_id', 2, 'value', ip_address),
@@ -160,7 +168,7 @@ def transform_slack_to_authorize_session(df):
     """
     Slack workspace settings/SSO → OCSF Authorize Session (3003)
     Actions: workspace_setting_changed, workspace_sso_enabled, workspace_sso_disabled
-    Schema: https://schema.ocsf.io/1.3.0/classes/authorize_session
+    Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (
         df
@@ -191,13 +199,15 @@ def transform_slack_to_authorize_session(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
-                'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', location_domain,
-                'uid_alt', CAST(NULL AS STRING)
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
+                    'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', location_domain,
+                    'uid_alt', CAST(NULL AS STRING)
+                )
             ) as actor""",
             """named_struct(
                 'uid', COALESCE(location_id, entity_id),
@@ -223,7 +233,7 @@ def transform_slack_to_user_access_management(df):
     """
     Slack app/guest access → OCSF User Access Management (3005)
     Actions: app_installed, app_uninstalled, app_scopes_expanded, guest_invited, guest_removed
-    Schema: https://schema.ocsf.io/1.3.0/classes/user_access_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/user_access_management
     """
     return (
         df
@@ -254,13 +264,15 @@ def transform_slack_to_user_access_management(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
-                'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', location_domain,
-                'uid_alt', CAST(NULL AS STRING)
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
+                    'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', location_domain,
+                    'uid_alt', CAST(NULL AS STRING)
+                )
             ) as actor""",
             "CASE WHEN action LIKE '%guest%' THEN named_struct('uid', entity_id, 'name', entity_name, 'type', 'User', 'type_id', 1, 'email_addr', CAST(NULL AS STRING), 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",
             """named_struct(
@@ -287,7 +299,7 @@ def transform_slack_to_group_management(df):
     """
     Slack channel/usergroup operations → OCSF Group Management (3006)
     Actions: channel_*, usergroup_*
-    Schema: https://schema.ocsf.io/1.3.0/classes/group_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/group_management
     """
     return (
         df
@@ -329,13 +341,15 @@ def transform_slack_to_group_management(df):
             "'Success' as status",
             "CAST(_event_time AS TIMESTAMP) as time",
             """named_struct(
-                'uid', actor_id,
-                'name', actor_name,
-                'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
-                'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
-                'email_addr', actor_email,
-                'domain', location_domain,
-                'uid_alt', CAST(NULL AS STRING)
+                'user', named_struct(
+                    'uid', actor_id,
+                    'name', actor_name,
+                    'type', CASE WHEN actor_type = 'bot' THEN 'System' WHEN actor_type = 'service' THEN 'Service' ELSE 'User' END,
+                    'type_id', CASE WHEN actor_type = 'bot' THEN 3 WHEN actor_type = 'service' THEN 3 ELSE 1 END,
+                    'email_addr', actor_email,
+                    'domain', location_domain,
+                    'uid_alt', CAST(NULL AS STRING)
+                )
             ) as actor""",
             """CASE WHEN entity_type IN ('channel', 'usergroup') THEN named_struct(
                 'uid', entity_id,
