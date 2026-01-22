@@ -22,7 +22,7 @@ from utilities.utils import (
 def transform_slack_to_account_change(df):
     """
     Slack user lifecycle events → OCSF Account Change (3001)
-    Actions: user_created, user_deactivated, user_reactivated, user_role_changed, user_email_changed
+    Actions: user_created, user_deactivated, user_reactivated, user_role_changed, user_email_changed, user_permissions_assigned
     Schema: https://schema.ocsf.io/1.7.0/classes/account_change
     """
     return (
@@ -166,8 +166,8 @@ def transform_slack_to_authentication(df):
 
 def transform_slack_to_authorize_session(df):
     """
-    Slack workspace settings/SSO → OCSF Authorize Session (3003)
-    Actions: workspace_setting_changed, workspace_sso_enabled, workspace_sso_disabled
+    Slack workspace operations → OCSF Authorize Session (3003)
+    Actions: workspace_setting_changed, workspace_sso_enabled, workspace_sso_disabled, workspace_created, workspace_name_changed, workspace_domain_changed
     Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (

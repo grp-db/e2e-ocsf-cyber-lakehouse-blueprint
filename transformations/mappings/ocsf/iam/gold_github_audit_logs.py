@@ -4,12 +4,12 @@ OCSF IAM GitHub Mappings
 GitHub audit log transformations to OCSF IAM event classes.
 
 OCSF IAM Class Coverage (5 of 6):
-✅ 1. Account Change (3001) - Member management (org/team/repo)
-✅ 2. Authentication (3002) - Login/logout, OAuth events
+✅ 1. Account Change (3001) - Organization membership (org.add/remove/update_member)
+✅ 2. Authentication (3002) - OAuth authorizations (login/logout proxy)
 ✅ 3. Authorize Session (3003) - Repository access, protected branches
 ❌ 4. Entity Management (3004) - NOT MAPPED (not applicable to GitHub's model)
-✅ 5. User Access Management (3005) - Organization member management
-✅ 6. Group Management (3006) - Team operations
+✅ 5. User Access Management (3005) - Permission changes (org.update_member, billing)
+✅ 6. Group Management (3006) - Team operations (team.add/remove_member, create/destroy)
 """
 
 from pyspark.sql.functions import array, to_json, cast
@@ -21,13 +21,13 @@ from utilities.utils import (
 
 def transform_github_to_account_change(df):
     """
-    GitHub user lifecycle events → OCSF Account Change (3001)
-    Actions: org.add_member, team.add_member/remove_member, repo.add_member/update_member/remove_member
+    GitHub organizational membership changes → OCSF Account Change (3001)
+    Actions: org.add_member, org.remove_member, org.update_member
     Schema: https://schema.ocsf.io/1.7.0/classes/account_change
     """
     return (
         df
-        .where("action RLIKE '(org|team|repo)\\.(add_member|remove_member|update_member)'")
+        .where("action RLIKE 'org\\.(add_member|remove_member|update_member)'")
         .selectExpr(
             "_event_date",
             "CAST(_event_time AS TIMESTAMP) as _event_time",
@@ -157,12 +157,12 @@ def transform_github_to_authentication(df):
 def transform_github_to_authorize_session(df):
     """
     GitHub repo access/permissions → OCSF Authorize Session (3003)
-    Actions: repo.access, repo.add_member, repo.remove_member, protected_branch operations
+    Actions: repo.add_member, repo.update_member, repo.remove_member, protected_branch operations
     Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (
         df
-        .where("action RLIKE 'repo\\.(access|add_member|remove_member|update_member)|protected_branch\\.(create|destroy)'")
+        .where("action RLIKE 'repo\\.(add_member|remove_member|update_member)|protected_branch\\.(create|destroy)'")
         .selectExpr(
             "_event_date",
             "CAST(_event_time AS TIMESTAMP) as _event_time",
@@ -213,13 +213,13 @@ def transform_github_to_authorize_session(df):
 
 def transform_github_to_user_access_management(df):
     """
-    GitHub org member management → OCSF User Access Management (3005)
-    Actions: org.add_member, org.remove_member, org.update_member, org.add_billing_manager
+    GitHub permission management → OCSF User Access Management (3005)
+    Actions: org.update_member (permission changes), org.add_billing_manager
     Schema: https://schema.ocsf.io/1.7.0/classes/user_access_management
     """
     return (
         df
-        .where("action RLIKE 'org\\.(add_member|remove_member|update_member|add_billing_manager)'")
+        .where("action RLIKE 'org\\.(update_member|add_billing_manager)'")
         .selectExpr(
             "_event_date",
             "CAST(_event_time AS TIMESTAMP) as _event_time",

@@ -122,6 +122,50 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 
 **Implementation Note**: Keep core OCSF fields consistent (category_uid, class_uid, activity_id, severity_id, time, actor). Delta Lake handles schema evolution for source-specific fields.
 
+---
+
+## 🔀 Source Action → OCSF Class Mappings
+
+### GitHub Actions
+| OCSF Class | Example Actions | Mapping Logic |
+|------------|----------------|---------------|
+| **Account Change (3001)** | `user.*`, `org.add_member`, `org.remove_member` | User lifecycle and org membership changes |
+| **Authentication (3002)** | `oauth_authorization.*` | OAuth app authorizations (login proxy) |
+| **Authorize Session (3003)** | `repo.add_member`, `repo.update_member`, `protected_branch.*` | Repository access and branch protection |
+| **User Access Management (3005)** | `repo.add_member`, `repo.update_member` | Permission grants/changes on repositories |
+| **Group Management (3006)** | `team.add_member`, `team.remove_member`, `team.*` | Team creation and membership |
+
+### Slack Actions
+| OCSF Class | Example Actions | Mapping Logic |
+|------------|----------------|---------------|
+| **Account Change (3001)** | `user_login`, `user_created`, `user_deactivated`, `user_role_changed` | User lifecycle and role changes |
+| **Authentication (3002)** | `user_login`, `user_logout` | Login/logout events |
+| **Authorize Session (3003)** | `workspace_sso_enabled`, `channel_posting_permissions_updated` | Workspace access controls |
+| **User Access Management (3005)** | `guest_invited`, `user_permissions_assigned` | Guest access and permissions |
+| **Group Management (3006)** | `usergroup_created`, `usergroup_member_added`, `channel_archive` | User groups and channels |
+
+### Atlassian Actions
+| OCSF Class | Example Actions | Mapping Logic |
+|------------|----------------|---------------|
+| **Account Change (3001)** | `user.created`, `user.deleted`, `user.suspended`, `user.2fa_enabled` | User lifecycle and security settings |
+| **Authentication (3002)** | `user.login`, `user.login_failed`, `user.password_changed` | Authentication events |
+| **Authorize Session (3003)** | `domain.verified`, `ip_allowlist.updated`, `session.terminated` | Access controls and session management |
+| **Entity Management (3004)** | `workspace.created`, `project.created`, `integration.installed` | Resource/entity lifecycle |
+| **User Access Management (3005)** | `permission.granted`, `role.assigned`, `product.access_granted` | Permission and role assignments |
+| **Group Management (3006)** | `group.created`, `group.member_added`, `group.member_removed` | Group lifecycle and membership |
+
+**Pattern**: Actions are mapped based on **intent** (what changed) not just naming:
+- **Account Change** = User/account lifecycle
+- **Authentication** = Identity verification (login/logout)
+- **Authorize Session** = Access control decisions
+- **Entity Management** = Resource/workspace lifecycle
+- **User Access Management** = Permission grants/changes
+- **Group Management** = Group/team operations
+
+See [transformation files](../transformations/mappings/ocsf/iam/) for complete action regex patterns and mapping logic.
+
+---
+
 > **⚠️ Sample Data Limitations**: The raw audit logs in `_raw_logs/` are AI-generated samples based on Atlassian, Slack, and GitHub audit log API documentation. They are simplified for demonstration purposes. Production logs often include additional fields:
 > - **Email addresses** for target users in group/permission changes
 > - **Detailed metadata** in entity/resource objects

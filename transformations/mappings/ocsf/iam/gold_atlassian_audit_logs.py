@@ -188,7 +188,7 @@ def transform_atlassian_to_authentication(df):
 def transform_atlassian_to_authorize_session(df):
     """
     Atlassian permission/role operations → OCSF Authorize Session (3003)
-    Actions: permission.granted, permission.revoked, role.assigned, role.removed, organization.sso_enabled
+    Actions: permission.granted, permission.revoked, role.assigned, role.removed, organization.sso_enabled, organization.sso_disabled, organization.scim_enabled
     Schema: https://schema.ocsf.io/1.7.0/classes/authorize_session
     """
     return (
