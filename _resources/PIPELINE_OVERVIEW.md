@@ -101,7 +101,7 @@ e2e-cyber-lakehouse/
 - Source-specific schemas
 
 ### 🥇 Gold - OCSF Normalized
-- Transform to OCSF v1.3.0 IAM schema
+- Transform to OCSF v1.7.0 IAM schema
 - 6 unified tables (one per OCSF class)
 - Multi-source append flows (GitHub + Slack + Atlassian → single table)
 - SIEM-ready output
@@ -218,8 +218,8 @@ def kafka_bronze_variant():
 **Total**: 15 append flows (5 GitHub + 5 Slack + 5 Atlassian) → 6 unified tables
 
 **OCSF Category**: Identity & Access Management (UID: 3)  
-**OCSF Version**: 1.3.0  
-**Docs**: https://schema.ocsf.io/1.3.0/categories/iam
+**OCSF Version**: 1.7.0  
+**Docs**: https://schema.ocsf.io/1.7.0/categories/iam
 
 ---
 
@@ -230,4 +230,4 @@ def kafka_bronze_variant():
 - **Delta Lake** - ACID transactions, auto-optimization
 - **Unity Catalog** - Data governance
 - **Variant Data Type** - Schema-on-read for JSON
-- **OCSF v1.3.0** - Open security schema standard
+- **OCSF v1.7.0** - Open security schema standard

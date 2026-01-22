@@ -10,7 +10,7 @@
 - SIEM-ready (Splunk, Sentinel, Chronicle, etc.)
 - Cross-source threat detection and correlation
 
-**Version**: 1.3.0 | **Site**: https://schema.ocsf.io/
+**Version**: 1.7.0 | **Site**: https://schema.ocsf.io/
 
 ---
 
@@ -112,12 +112,12 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 
 ## 📚 OCSF Schema References
 
-- [IAM Category](https://schema.ocsf.io/1.3.0/categories/iam) - Overview
-- [Account Change (3001)](https://schema.ocsf.io/1.3.0/classes/account_change) - User lifecycle
-- [Authentication (3002)](https://schema.ocsf.io/1.3.0/classes/authentication) - Login/logout (requires `src_endpoint`)
-- [Authorize Session (3003)](https://schema.ocsf.io/1.3.0/classes/authorize_session) - Authorization (requires `resource`)
-- [Entity Management (3004)](https://schema.ocsf.io/1.3.0/classes/entity_management) - Resource lifecycle (requires `resource`)
-- [User Access Management (3005)](https://schema.ocsf.io/1.3.0/classes/user_access_management) - Permissions (requires `user`, `resource`)
-- [Group Management (3006)](https://schema.ocsf.io/1.3.0/classes/group_management) - Groups (requires `group`)
+- [IAM Category](https://schema.ocsf.io/1.7.0/categories/iam) - Overview
+- [Account Change (3001)](https://schema.ocsf.io/1.7.0/classes/account_change) - User lifecycle
+- [Authentication (3002)](https://schema.ocsf.io/1.7.0/classes/authentication) - Login/logout (requires `src_endpoint`)
+- [Authorize Session (3003)](https://schema.ocsf.io/1.7.0/classes/authorize_session) - Authorization (requires `resource`)
+- [Entity Management (3004)](https://schema.ocsf.io/1.7.0/classes/entity_management) - Resource lifecycle (requires `resource`)
+- [User Access Management (3005)](https://schema.ocsf.io/1.7.0/classes/user_access_management) - Permissions (requires `user`, `resource`)
+- [Group Management (3006)](https://schema.ocsf.io/1.7.0/classes/group_management) - Groups (requires `group`)
 
 **Implementation Note**: Keep core OCSF fields consistent (category_uid, class_uid, activity_id, severity_id, time, actor). Delta Lake handles schema evolution for source-specific fields.

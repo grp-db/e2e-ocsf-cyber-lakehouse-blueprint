@@ -1,6 +1,6 @@
 # E2E OCSF Cyber Lakehouse Blueprint
 
-**Medallion Architecture** (Bronze → Silver → Gold) that transforms audit logs from GitHub, Slack, and Atlassian into **OCSF 1.3.0 IAM-normalized** security events.
+**Medallion Architecture** (Bronze → Silver → Gold) that transforms audit logs from GitHub, Slack, and Atlassian into **OCSF 1.7.0 IAM-normalized** security events.
 
 ## 🎯 What This Does
 
@@ -60,8 +60,8 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 | **user_access_management** | 3005 | GitHub, Slack |
 | **group_management** | 3006 | GitHub, Slack, Atlassian |
 
-**OCSF Version**: 1.3.0 | **Category**: IAM (UID 3) | **Docs**: https://schema.ocsf.io/
+**OCSF Version**: 1.7.0 | **Category**: IAM (UID 3) | **Docs**: https://schema.ocsf.io/1.7.0/categories/iam
 
 ---
 
-**Tech Stack Built with 💜**: OCSF • Databricks 🚀 • Spark Declarative Pipelines • Spark Streaming • Auto Loader • Delta Lake • Unity Catalog
+**Tech Stack Built with 💜**: OCSF v1.7.0 • Databricks 🚀 • Spark Declarative Pipelines • Spark Streaming • Auto Loader • Delta Lake • Unity Catalog
