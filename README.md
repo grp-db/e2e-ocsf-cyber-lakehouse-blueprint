@@ -77,4 +77,4 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 
 ---
 
-**Tech Stack Built with 💜**: OCSF v1.7.0 • Databricks 🚀 • Spark Declarative Pipelines • Spark Streaming • Auto Loader • Delta Lake • Unity Catalog
+**Tech Stack Built with 💜**: OCSF v1.7.0 📖 • Databricks 🚀 • Spark Declarative Pipelines 🧠 • Spark Streaming 🌊 • Auto Loader ⚓ • Delta Lake 🏞️ • Unity Catalog 📚
