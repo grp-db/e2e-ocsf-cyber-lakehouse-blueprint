@@ -25,25 +25,36 @@ Unifies audit logs from multiple sources into **6 OCSF IAM tables** for cross-pl
 e2e-ocsf-cyber-lakehouse-blueprint/
 │
 ├── transformations/
-│   ├── pipelines/                      # Bronze & Silver layers
-│   │   ├── github/audit_logs/          # GitHub ingestion & parsing
-│   │   ├── slack/audit_logs/           # Slack ingestion & parsing
-│   │   └── atlassian/audit_logs/       # Atlassian ingestion & parsing
+│   ├── pipelines/                              # Bronze & Silver layers
+│   │   ├── github/audit_logs/
+│   │   │   ├── bronze_github_audit_logs.py         # Auto Loader ingestion
+│   │   │   └── silver_github_audit_logs.py         # JSON parsing with Variant
+│   │   ├── slack/audit_logs/
+│   │   │   ├── bronze_slack_audit_logs.py          # Auto Loader ingestion
+│   │   │   └── silver_slack_audit_logs.py          # JSON parsing with Variant
+│   │   └── atlassian/audit_logs/
+│   │       ├── bronze_atlassian_audit_logs.py      # Auto Loader ingestion
+│   │       └── silver_atlassian_audit_logs.py      # JSON parsing with Variant
 │   │
-│   └── mappings/ocsf/iam/              # Gold layer (OCSF normalization)
-│       ├── gold_github_audit_logs.py       # GitHub → OCSF transformations
-│       ├── gold_slack_audit_logs.py        # Slack → OCSF transformations
-│       ├── gold_atlassian_audit_logs.py    # Atlassian → OCSF transformations
-│       └── gold_ocsf_iam_event_classes.py  # Creates 6 unified OCSF tables
+│   └── mappings/ocsf/iam/                      # Gold layer (OCSF normalization)
+│       ├── __init__.py
+│       ├── gold_github_audit_logs.py               # GitHub → OCSF transformations
+│       ├── gold_slack_audit_logs.py                # Slack → OCSF transformations
+│       ├── gold_atlassian_audit_logs.py            # Atlassian → OCSF transformations
+│       └── gold_ocsf_iam_event_classes.py          # Creates 6 unified OCSF tables
 │
 ├── utilities/
-│   └── utils.py                        # Shared constants (catalog, databases, tables, etc.)
+│   ├── __init__.py
+│   └── utils.py                                # Shared constants (catalog, databases, etc.)
 │
 ├── _resources/
-│   ├── OCSF_ARCHITECTURE.md            # OCSF overview, categories, IAM classes
-│   └── PIPELINE_OVERVIEW.md            # Pipeline patterns, ingestion examples
+│   ├── OCSF_ARCHITECTURE.md                    # OCSF overview, categories, IAM classes
+│   └── PIPELINE_OVERVIEW.md                    # Pipeline patterns, ingestion examples
 │
-└── _raw_logs/                          # Sample audit log files
+├── _images/
+│   └── pipeline_graph.png                      # Pipeline visualization screenshot
+│
+└── _raw_logs/                                  # AI-generated sample audit logs
     ├── github-audit-logs.json
     ├── slack-audit-logs.json
     └── atlassian-audit-logs.json

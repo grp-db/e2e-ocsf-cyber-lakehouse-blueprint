@@ -47,24 +47,41 @@
 ## 📂 Repository Structure
 
 ```
-e2e-cyber-lakehouse/
+e2e-ocsf-cyber-lakehouse-blueprint/
 ├── transformations/
-│   ├── pipelines/
-│   │   └── <source>/<source_type>/
-│   │       ├── bronze_<source>_<source_type>.py
-│   │       └── silver_<source>_<source_type>.py
+│   ├── pipelines/                              # Bronze & Silver layers
+│   │   ├── github/audit_logs/
+│   │   │   ├── bronze_github_audit_logs.py         # Auto Loader ingestion
+│   │   │   └── silver_github_audit_logs.py         # Variant JSON parsing
+│   │   ├── slack/audit_logs/
+│   │   │   ├── bronze_slack_audit_logs.py
+│   │   │   └── silver_slack_audit_logs.py
+│   │   └── atlassian/audit_logs/
+│   │       ├── bronze_atlassian_audit_logs.py
+│   │       └── silver_atlassian_audit_logs.py
 │   │
-│   └── mappings/
-│       └── ocsf/iam/
-│           ├── gold_<source>_<source_type>.py
-│           └── gold_ocsf_iam_event_classes.py  # Unified tables
+│   └── mappings/ocsf/iam/                      # Gold layer (OCSF)
+│       ├── __init__.py
+│       ├── gold_github_audit_logs.py               # 5 OCSF transformations
+│       ├── gold_slack_audit_logs.py                # 5 OCSF transformations
+│       ├── gold_atlassian_audit_logs.py            # 5 OCSF transformations
+│       └── gold_ocsf_iam_event_classes.py          # 6 unified OCSF tables
 │
 ├── utilities/
-│   └── utils.py
+│   ├── __init__.py
+│   └── utils.py                                # Shared constants
 │
-└── _resources/
-    ├── PIPELINE_OVERVIEW.md
-    └── OCSF_ARCHITECTURE.md
+├── _resources/
+│   ├── OCSF_ARCHITECTURE.md
+│   └── PIPELINE_OVERVIEW.md
+│
+├── _images/
+│   └── pipeline_graph.png
+│
+└── _raw_logs/                                  # AI-generated samples
+    ├── github-audit-logs.json
+    ├── slack-audit-logs.json
+    └── atlassian-audit-logs.json
 ```
 
 ---
@@ -110,7 +127,7 @@ e2e-cyber-lakehouse/
 
 ## 💾 Ingestion Patterns
 
-### Auto Loader (Batch/Micro-batch)
+### Auto Loader (Micro-batch Streaming)
 
 ```python
 from pyspark import pipelines as sdp
