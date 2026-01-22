@@ -390,7 +390,9 @@ def transform_atlassian_to_group_management(df):
                 )
             ) as actor""",
             "named_struct('uid', event_id, 'name', 'Group', 'type', 'Group') as `group`",
-            "CASE WHEN action LIKE '%member%' THEN named_struct('uid', actor_id, 'name', actor_name, 'type', 'User', 'type_id', 1, 'email_addr', actor_email, 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",
+            # Note: user field is NULL because target user details are in the context array (JSON string).
+            # Production implementations may parse context to extract user info if needed.
+            "CAST(NULL AS STRUCT<uid: STRING, name: STRING, type: STRING, type_id: INT, email_addr: STRING, domain: STRING, uid_alt: STRING>) as user",
             """array(
                 named_struct('name', 'actor_id', 'type', 'User Name', 'type_id', 4, 'value', actor_id),
                 named_struct('name', 'actor_email', 'type', 'Email Address', 'type_id', 5, 'value', actor_email)

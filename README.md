@@ -17,6 +17,8 @@ Unifies audit logs from multiple sources into **6 OCSF IAM tables** for cross-pl
 
 **15 Append Flows** → **6 Unified OCSF Tables** | All streaming tables ✅
 
+> **⚠️ Note on Sample Data**: The raw logs in `_raw_logs/` are AI-generated samples based on Atlassian, Slack, and GitHub audit log API documentation. They are simplified for demonstration purposes. Production audit logs typically contain additional fields (e.g., target user emails, detailed entity metadata). The transformation logic is production-ready—adjust field mappings based on your actual data structure.
+
 ## 📂 Repository Structure
 
 ```

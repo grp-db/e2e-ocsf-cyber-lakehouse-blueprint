@@ -357,7 +357,9 @@ def transform_slack_to_group_management(df):
                 'type', entity_type,
                 'privileges', CASE WHEN entity_privacy IS NOT NULL THEN array(entity_privacy) ELSE CAST(NULL AS ARRAY<STRING>) END
             ) END as `group`""",
-            "CASE WHEN action LIKE '%member%' THEN named_struct('uid', actor_id, 'name', actor_name, 'type', 'User', 'type_id', 1, 'email_addr', actor_email, 'domain', CAST(NULL AS STRING), 'uid_alt', CAST(NULL AS STRING)) END as user",
+            # Note: user field is NULL because Slack's entity object contains the usergroup being modified,
+            # not the target user. Production logs may include this in the details field requiring additional parsing.
+            "CAST(NULL AS STRUCT<uid: STRING, name: STRING, type: STRING, type_id: INT, email_addr: STRING, domain: STRING, uid_alt: STRING>) as user",
             """array(
                 named_struct('name', 'actor_id', 'type', 'User Name', 'type_id', 4, 'value', actor_id),
                 named_struct('name', 'entity', 'type', 'Group Name', 'type_id', 21, 'value', entity_name)

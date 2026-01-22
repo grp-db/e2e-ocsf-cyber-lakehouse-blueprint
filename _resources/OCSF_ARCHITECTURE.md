@@ -121,3 +121,10 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 - [Group Management (3006)](https://schema.ocsf.io/1.7.0/classes/group_management) - Groups (requires `group`)
 
 **Implementation Note**: Keep core OCSF fields consistent (category_uid, class_uid, activity_id, severity_id, time, actor). Delta Lake handles schema evolution for source-specific fields.
+
+> **⚠️ Sample Data Limitations**: The raw audit logs in `_raw_logs/` are AI-generated samples based on Atlassian, Slack, and GitHub audit log API documentation. They are simplified for demonstration purposes. Production logs often include additional fields:
+> - **Email addresses** for target users in group/permission changes
+> - **Detailed metadata** in entity/resource objects
+> - **Extended authentication** details (MFA, device info)
+> 
+> The transformation logic is production-ready and follows OCSF 1.7.0 specs. Mappings set optional fields to NULL when source data is unavailable—adjust based on your actual log structure.
