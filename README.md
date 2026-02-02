@@ -15,9 +15,39 @@ Unifies audit logs from multiple sources into **6 OCSF IAM tables** for cross-pl
 
 *Pipeline output using sample audit log files from `_raw_logs/` folder*
 
-**15 Append Flows** → **6 Unified OCSF Tables** | All streaming tables ✅
+**15 Append Flows** → **6 Unified OCSF Tables** (Delta Lake Sinks)
+
+### Why Delta Lake Sinks for OCSF Tables?
+
+OCSF tables use **SDP Delta sinks** instead of streaming tables because:
+
+- **Multiple sources write to the same unified table** (e.g., GitHub, Slack, and Atlassian all write to `ocsf_iam_account_change`)
+- **SDP streaming tables limitation**: Only the pipeline that creates a streaming table can write to it
+- **Delta sinks enable multi-source writes**: Multiple append flows (one per source) write to the same sink, which outputs to one unified Delta table
+
+**Architecture Pattern**:
+```
+Bronze/Silver: SDP Streaming Tables (single pipeline per table)
+Gold (OCSF):   6 Sinks + 15 Append Flows → 6 Unified Tables
+               
+Example: ocsf_iam_account_change (ONE SINK, ONE TABLE)
+  ├─ github_account_change (append flow)    ──┐
+  ├─ slack_account_change (append flow)     ──┼─→ ocsf_iam_account_change (sink)
+  └─ atlassian_account_change (append flow) ──┘  └─→ grp.ocsf.ocsf_iam_account_change (table)
+```
+
+**Result**: Query `SELECT * FROM ocsf_iam_account_change` returns data from **all sources** (use `_source` column to filter by source)
+
+> **📝 Note on Pipeline Design**: This example demonstrates all transformations within a single SDP pipeline file (`gold_ocsf_iam_event_classes_delta_sinks.py`). For enterprise deployments, consider separating this into multiple SDP pipelines per source (e.g., `github_to_ocsf_pipeline.py`, `slack_to_ocsf_pipeline.py`, `atlassian_to_ocsf_pipeline.py`) for improved data management architecture, independent deployment, and fault isolation.
 
 > **⚠️ Note on Sample Data**: The raw logs in `_raw_logs/` are AI-generated samples based on Atlassian, Slack, and GitHub audit log API documentation. They are simplified for demonstration purposes. Production audit logs typically contain additional fields (e.g., target user emails, detailed entity metadata). The transformation logic is production-ready—adjust field mappings based on your actual data structure.
+
+> **🔧 Deployment Steps**: SDP does not support DDL commands within pipeline definitions. Run these setup scripts in Databricks notebooks:
+> 1. **Before pipelines**: `utilities/pre_setup_ocsf_tables.py` - Creates all databases (github, slack, atlassian, ocsf) and OCSF tables with minimal schema (time column)
+> 2. **Run your pipelines**: Bronze → Silver → Gold
+>    - Bronze/Silver tables: Auto-created by `@sdp.table` decorators
+>    - Gold OCSF tables: Auto-populated by Delta sinks with schema evolution (`mergeSchema: true`)
+> 3. **After pipelines**: `utilities/post_setup_ocsf_tables.py` - Adds liquid clustering for query optimization
 
 ## 📂 Repository Structure
 
@@ -41,11 +71,13 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 │       ├── gold_github_audit_logs.py               # GitHub → OCSF transformations
 │       ├── gold_slack_audit_logs.py                # Slack → OCSF transformations
 │       ├── gold_atlassian_audit_logs.py            # Atlassian → OCSF transformations
-│       └── gold_ocsf_iam_event_classes.py          # Creates 6 unified OCSF tables
+│       └── gold_ocsf_iam_event_classes_delta_sinks.py  # Creates 6 OCSF Delta sinks
 │
 ├── utilities/
 │   ├── __init__.py
-│   └── utils.py                                # Shared constants (catalog, databases, etc.)
+│   ├── utils.py                                # Shared constants (catalog, databases, etc.)
+│   ├── pre_setup_ocsf_tables.py                # Pre-pipeline: Create OCSF tables with minimal schema
+│   └── post_setup_ocsf_tables.py               # Post-pipeline: Add liquid clustering
 │
 ├── _resources/
 │   ├── OCSF_ARCHITECTURE.md                    # OCSF overview, categories, IAM classes
@@ -70,7 +102,7 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 | **authentication** | 3002 | GitHub, Slack, Atlassian |
 | **authorize_session** | 3003 | GitHub, Slack, Atlassian |
 | **entity_management** | 3004 | Atlassian only |
-| **user_access_management** | 3005 | GitHub, Slack |
+| **user_access** | 3005 | GitHub, Slack |
 | **group_management** | 3006 | GitHub, Slack, Atlassian |
 
 **OCSF Version**: 1.7.0 | **Category**: IAM (UID 3) | **Docs**: https://schema.ocsf.io/1.7.0/categories/iam

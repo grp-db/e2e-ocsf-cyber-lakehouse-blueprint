@@ -9,23 +9,14 @@ from pyspark import pipelines as sdp
 
 from utilities.utils import (
     CATALOG, DATABASES, BRONZE_TABLES, SILVER_TABLES,
-    SOURCE_NAMES, SOURCE_TYPE
+    SOURCE_NAMES, SOURCE_TYPE, TABLE_PROPERTIES
 )
 
-# Set catalog and database context
-spark.sql(f"USE CATALOG {CATALOG}")
-spark.sql(f"USE DATABASE {DATABASES['atlassian']}")
-
-
 @sdp.table(
-    name=SILVER_TABLES["atlassian"],
+    name=f"{CATALOG}.{DATABASES['atlassian']}.{SILVER_TABLES['atlassian']}",
     cluster_by=["_event_date"],
     comment=f"Parsed {SOURCE_NAMES['atlassian']} {SOURCE_TYPE} with extracted fields",
-    table_properties={
-        "delta.autoOptimize.optimizeWrite": "true",
-        "delta.autoOptimize.autoCompact": "true",
-        "pipelines.autoOptimize.managed": "true"
-    }
+    table_properties=TABLE_PROPERTIES
 )
 def silver_atlassian_audit_logs():
     """

@@ -65,11 +65,13 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 │       ├── gold_github_audit_logs.py               # 5 OCSF transformations
 │       ├── gold_slack_audit_logs.py                # 5 OCSF transformations
 │       ├── gold_atlassian_audit_logs.py            # 5 OCSF transformations
-│       └── gold_ocsf_iam_event_classes.py          # 6 unified OCSF tables
+│       └── gold_ocsf_iam_event_classes_delta_sinks.py  # 6 OCSF Delta sinks
 │
 ├── utilities/
 │   ├── __init__.py
-│   └── utils.py                                # Shared constants
+│   ├── utils.py                                # Shared constants
+│   ├── pre_setup_ocsf_tables.py                # Pre-pipeline: Create OCSF tables with minimal schema
+│   └── post_setup_ocsf_tables.py               # Post-pipeline: Add liquid clustering
 │
 ├── _resources/
 │   ├── OCSF_ARCHITECTURE.md
@@ -99,7 +101,7 @@ e2e-ocsf-cyber-lakehouse-blueprint/
     ├── ocsf_iam_authentication         # 3002
     ├── ocsf_iam_authorize_session      # 3003
     ├── ocsf_iam_entity_management      # 3004
-    ├── ocsf_iam_user_access_management # 3005
+    ├── ocsf_iam_user_access            # 3005
     └── ocsf_iam_group_management       # 3006
 ```
 
@@ -121,7 +123,10 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 - Transform to OCSF v1.7.0 IAM schema
 - 6 unified tables (one per OCSF class)
 - Multi-source append flows (GitHub + Slack + Atlassian → single table)
+- **Uses Delta Lake sinks** (not streaming tables) to enable multiple pipelines writing to same table
 - SIEM-ready output
+- **Pre-setup**: Run `utilities/pre_setup_ocsf_tables.py` before first pipeline run to create all databases and OCSF tables with minimal schema (time column)
+- **Post-setup**: Run `utilities/post_setup_ocsf_tables.py` after pipeline run to add liquid clustering
 
 ---
 
@@ -229,7 +234,7 @@ def kafka_bronze_variant():
 | Authentication | 3002 | Login/logout | GitHub, Slack, Atlassian |
 | Authorize Session | 3003 | Access authorization | GitHub, Slack, Atlassian |
 | Entity Management | 3004 | Resource lifecycle | Atlassian only |
-| User Access Management | 3005 | Permission management | GitHub, Slack |
+| User Access | 3005 | Permission management | GitHub, Slack |
 | Group Management | 3006 | Group/team operations | GitHub, Slack, Atlassian |
 
 **Total**: 15 append flows (5 GitHub + 5 Slack + 5 Atlassian) → 6 unified tables
@@ -237,6 +242,73 @@ def kafka_bronze_variant():
 **OCSF Category**: Identity & Access Management (UID: 3)  
 **OCSF Version**: 1.7.0  
 **Docs**: https://schema.ocsf.io/1.7.0/categories/iam
+
+### 🔄 Multi-Source Write Pattern (Unified Tables)
+
+**Challenge**: Multiple sources need to write to the **same unified OCSF table** (e.g., GitHub, Slack, and Atlassian all write to `ocsf_iam_account_change`).
+
+**SDP Streaming Table Limitation**: A streaming table can only be written to by the pipeline that created it. If you try to write to it from another pipeline, you'll get an error.
+
+**Solution**: Use **SDP Delta sinks** with `@sdp.append_flow(target="sink_name")`. Multiple append flows (one per source) write to the **same sink**, which outputs to one unified Delta table.
+
+**Architecture**:
+- **Total sinks**: 6 (one per OCSF class)
+- **Total tables**: 6 (one unified table per OCSF class - contains all sources)
+- **Total append flows**: 15 (multiple sources writing to each sink)
+- **Result**: Single table contains data from all sources (query once, get all sources)
+
+**Implementation**:
+```python
+from utilities.utils import CATALOG, DATABASES, OCSF_TABLES
+
+# Create ONE sink per OCSF table
+# mergeSchema enables dynamic schema evolution from multiple sources
+sdp.create_sink(
+    name=OCSF_TABLES['account_change'],
+    format="delta",
+    options={
+        "tableName": f"{CATALOG}.{DATABASES['ocsf']}.{OCSF_TABLES['account_change']}",
+        "mergeSchema": "true"
+    }
+)
+
+# Multiple append flows target the SAME sink
+@sdp.append_flow(name="github_account_change", target=OCSF_TABLES['account_change'])
+def github_account_change():
+    return transform_github_to_account_change(
+        spark.readStream.table(f"{CATALOG}.github.github_audit_logs_slv")
+    )
+
+@sdp.append_flow(name="slack_account_change", target=OCSF_TABLES['account_change'])
+def slack_account_change():
+    return transform_slack_to_account_change(
+        spark.readStream.table(f"{CATALOG}.slack.slack_audit_logs_slv")
+    )
+
+@sdp.append_flow(name="atlassian_account_change", target=OCSF_TABLES['account_change'])
+def atlassian_account_change():
+    return transform_atlassian_to_account_change(
+        spark.readStream.table(f"{CATALOG}.atlassian.atlassian_audit_logs_slv")
+    )
+```
+
+**Result**: Multiple streaming queries (append flows) write to the same sink, which outputs to one unified Delta table.
+
+**Query Example** (Unified Table):
+```sql
+-- Single query returns data from ALL sources
+SELECT _source, class_name, actor.user.name, COUNT(*) 
+FROM grp.ocsf.ocsf_iam_account_change
+GROUP BY _source, class_name, actor.user.name;
+
+-- Results:
+-- _source    | class_name      | name         | count
+-- github     | Account Change  | octocat      | 45
+-- slack      | Account Change  | john.doe     | 32
+-- atlassian  | Account Change  | admin@corp   | 18
+```
+
+No JOINs needed - it's one unified table! 🎯
 
 ---
 

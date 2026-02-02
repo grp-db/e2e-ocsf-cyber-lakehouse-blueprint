@@ -8,7 +8,7 @@ OCSF IAM Class Coverage (5 of 6):
 ✅ 2. Authentication (3002) - Login/logout, session management
 ✅ 3. Authorize Session (3003) - Permissions, roles, SSO settings
 ✅ 4. Entity Management (3004) - Workspace/project/webhook management
-❌ 5. User Access Management (3005) - NOT MAPPED (covered by Authorize Session)
+❌ 5. User Access (3005) - NOT MAPPED (covered by Authorize Session)
 ✅ 6. Group Management (3006) - Group operations
 
 Note: Atlassian is the only source that maps to Entity Management (3004).
@@ -35,12 +35,18 @@ def transform_atlassian_to_account_change(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Atlassian', 'vendor_name', 'Atlassian'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', event_time_iso
             ) as metadata""",
@@ -111,12 +117,18 @@ def transform_atlassian_to_authentication(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Atlassian', 'vendor_name', 'Atlassian'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', event_time_iso
             ) as metadata""",
@@ -199,12 +211,18 @@ def transform_atlassian_to_authorize_session(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Atlassian', 'vendor_name', 'Atlassian'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', event_time_iso
             ) as metadata""",
@@ -271,12 +289,18 @@ def transform_atlassian_to_entity_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Atlassian', 'vendor_name', 'Atlassian'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', event_time_iso
             ) as metadata""",
@@ -352,12 +376,18 @@ def transform_atlassian_to_group_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Atlassian', 'vendor_name', 'Atlassian'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', event_time_iso
             ) as metadata""",

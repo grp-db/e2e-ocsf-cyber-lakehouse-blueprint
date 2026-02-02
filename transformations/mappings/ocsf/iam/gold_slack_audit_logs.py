@@ -8,7 +8,7 @@ OCSF IAM Class Coverage (5 of 6):
 ✅ 2. Authentication (3002) - Login/logout events
 ✅ 3. Authorize Session (3003) - Workspace settings, SSO
 ❌ 4. Entity Management (3004) - NOT MAPPED (workspace events mapped to Authorize Session)
-✅ 5. User Access Management (3005) - App/guest access management
+✅ 5. User Access (3005) - App/guest access management
 ✅ 6. Group Management (3006) - Channel/usergroup operations
 """
 
@@ -33,12 +33,18 @@ def transform_slack_to_account_change(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Slack', 'vendor_name', 'Slack Technologies'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(date_create_ts AS STRING)
             ) as metadata""",
@@ -112,12 +118,18 @@ def transform_slack_to_authentication(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Slack', 'vendor_name', 'Slack Technologies'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(date_create_ts AS STRING)
             ) as metadata""",
@@ -178,12 +190,18 @@ def transform_slack_to_authorize_session(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Slack', 'vendor_name', 'Slack Technologies'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(date_create_ts AS STRING)
             ) as metadata""",
@@ -229,11 +247,11 @@ def transform_slack_to_authorize_session(df):
         )
     )
 
-def transform_slack_to_user_access_management(df):
+def transform_slack_to_user_access(df):
     """
-    Slack app/guest access → OCSF User Access Management (3005)
+    Slack app/guest access → OCSF User Access (3005)
     Actions: app_installed, app_uninstalled, app_scopes_expanded, guest_invited, guest_removed
-    Schema: https://schema.ocsf.io/1.7.0/classes/user_access_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/user_access
     """
     return (
         df
@@ -243,19 +261,25 @@ def transform_slack_to_user_access_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Slack', 'vendor_name', 'Slack Technologies'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(date_create_ts AS STRING)
             ) as metadata""",
             f"CAST({OCSF_CATEGORY_UID} AS INT) as category_uid",
             f"'{OCSF_CATEGORY_NAME}' as category_name",
-            f"CAST({OCSF_CLASS_UIDS['user_access_management']} AS INT) as class_uid",
-            "'User Access Management' as class_name",
+            f"CAST({OCSF_CLASS_UIDS['user_access']} AS INT) as class_uid",
+            "'User Access' as class_name",
             "CASE WHEN action LIKE '%removed%' OR action LIKE '%uninstalled%' THEN 3 WHEN action LIKE '%invited%' OR action LIKE '%installed%' THEN 2 ELSE 1 END as severity_id",
             "CASE WHEN severity_id = 3 THEN 'Medium' WHEN severity_id = 2 THEN 'Low' ELSE 'Informational' END as severity",
             "CASE WHEN action LIKE '%installed' OR action LIKE '%invited' THEN 5 WHEN action LIKE '%uninstalled' OR action LIKE '%removed' THEN 6 WHEN action LIKE '%expanded' THEN 3 ELSE 99 END as activity_id",
@@ -309,12 +333,18 @@ def transform_slack_to_group_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'Slack', 'vendor_name', 'Slack Technologies'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(date_create_ts AS STRING)
             ) as metadata""",

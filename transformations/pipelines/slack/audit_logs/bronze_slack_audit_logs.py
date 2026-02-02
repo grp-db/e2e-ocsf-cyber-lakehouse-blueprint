@@ -11,13 +11,9 @@ from pyspark.sql.functions import (
 )
 
 from utilities.utils import (
-    CATALOG, DATABASES, FILE_PATHS, BRONZE_TABLES,
-    SOURCE_NAMES, SOURCE_TYPE
+    CATALOG, DATABASES, FILE_PATHS, SCHEMA_PATHS, BRONZE_TABLES,
+    SOURCE_NAMES, SOURCE_TYPE, TABLE_PROPERTIES
 )
-
-# Set catalog and database context
-spark.sql(f"USE CATALOG {CATALOG}")
-spark.sql(f"USE DATABASE {DATABASES['slack']}")
 
 # Metadata fields to add to bronze layer
 META_COLS = {
@@ -32,19 +28,17 @@ META_COLS = {
 
 
 @sdp.table(
-    name=BRONZE_TABLES["slack"],
+    name=f"{CATALOG}.{DATABASES['slack']}.{BRONZE_TABLES['slack']}",
     cluster_by=["_event_date"],
     comment=f"Raw {SOURCE_NAMES['slack']} {SOURCE_TYPE} streamed in from JSON files with variant column",
-    table_properties={
-        "delta.autoOptimize.optimizeWrite": "true",
-        "delta.autoOptimize.autoCompact": "true",
-        "pipelines.autoOptimize.managed": "true"
-    }
+    table_properties=TABLE_PROPERTIES
 )
 def bronze_slack_audit_logs():
     """
     Bronze layer: Ingest raw Slack audit logs using Auto Loader.
     Loads raw JSON as a single variant column.
+    
+    Note: FILE_PATHS['slack'] is defined in utilities/utils.py - CHANGE ME!
     """
     return (
         spark.readStream
@@ -52,8 +46,8 @@ def bronze_slack_audit_logs():
             .option("cloudFiles.format", "json")
             .option("cloudFiles.inferColumnTypes", "false")
             .option("singleVariantColumn", "data")
-            .option("cloudFiles.schemaLocation", f"{FILE_PATHS['slack']}_checkpoint")
-            .load(FILE_PATHS["slack"])
+            .option("cloudFiles.schemaLocation", SCHEMA_PATHS["slack"])
+            .load(FILE_PATHS["slack"])  # CHANGE ME! Set in utilities/utils.py
             .withColumns(META_COLS)
             .selectExpr(
                 # Metadata fields FIRST

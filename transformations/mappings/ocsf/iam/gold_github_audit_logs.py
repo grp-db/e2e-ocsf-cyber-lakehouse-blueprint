@@ -8,7 +8,7 @@ OCSF IAM Class Coverage (5 of 6):
 ✅ 2. Authentication (3002) - OAuth authorizations (login/logout proxy)
 ✅ 3. Authorize Session (3003) - Repository access, protected branches
 ❌ 4. Entity Management (3004) - NOT MAPPED (not applicable to GitHub's model)
-✅ 5. User Access Management (3005) - Permission changes (org.update_member, billing)
+✅ 5. User Access (3005) - Permission changes (org.update_member, billing)
 ✅ 6. Group Management (3006) - Team operations (team.add/remove_member, create/destroy)
 """
 
@@ -33,12 +33,18 @@ def transform_github_to_account_change(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'GitHub', 'vendor_name', 'GitHub Inc.'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(created_at_ms AS STRING)
             ) as metadata""",
@@ -107,12 +113,18 @@ def transform_github_to_authentication(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'GitHub', 'vendor_name', 'GitHub Inc.'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(created_at_ms AS STRING)
             ) as metadata""",
@@ -168,12 +180,18 @@ def transform_github_to_authorize_session(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'GitHub', 'vendor_name', 'GitHub Inc.'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(created_at_ms AS STRING)
             ) as metadata""",
@@ -211,11 +229,11 @@ def transform_github_to_authorize_session(df):
     )
 
 
-def transform_github_to_user_access_management(df):
+def transform_github_to_user_access(df):
     """
-    GitHub permission management → OCSF User Access Management (3005)
+    GitHub permission management → OCSF User Access (3005)
     Actions: org.update_member (permission changes), org.add_billing_manager
-    Schema: https://schema.ocsf.io/1.7.0/classes/user_access_management
+    Schema: https://schema.ocsf.io/1.7.0/classes/user_access
     """
     return (
         df
@@ -225,19 +243,25 @@ def transform_github_to_user_access_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'GitHub', 'vendor_name', 'GitHub Inc.'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(created_at_ms AS STRING)
             ) as metadata""",
             f"CAST({OCSF_CATEGORY_UID} AS INT) as category_uid",
             f"'{OCSF_CATEGORY_NAME}' as category_name",
-            f"CAST({OCSF_CLASS_UIDS['user_access_management']} AS INT) as class_uid",
-            "'User Access Management' as class_name",
+            f"CAST({OCSF_CLASS_UIDS['user_access']} AS INT) as class_uid",
+            "'User Access' as class_name",
             "CASE WHEN action LIKE '%remove%' THEN 3 WHEN action LIKE '%add%' THEN 2 ELSE 1 END as severity_id",
             "CASE WHEN severity_id = 3 THEN 'Medium' WHEN severity_id = 2 THEN 'Low' ELSE 'Informational' END as severity",
             "CASE WHEN action LIKE '%add%' THEN 5 WHEN action LIKE '%remove%' THEN 6 WHEN action LIKE '%update%' THEN 3 ELSE 99 END as activity_id",
@@ -276,12 +300,18 @@ def transform_github_to_group_management(df):
             "CAST(_event_time AS TIMESTAMP) as _event_time",
             "_source",
             "_source_type",
+            # Metadata: log_version tracks schema version (e.g., source@type__1.0)
+            # Increment version (1.0 -> 1.1) when OCSF mappings change to enable selective record deletion
             f"""named_struct(
                 'version', '{OCSF_VERSION}',
                 'product', named_struct('name', 'GitHub', 'vendor_name', 'GitHub Inc.'),
                 'profiles', array('cloud', 'datetime'),
                 'uid', event_id,
                 'event_code', action,
+                'log_format', 'JSON',
+                'log_name', 'audit_logs',
+                'log_provider', _source,
+                'log_version', CONCAT(_source, '@', _source_type, '__1.0'),
                 'logged_time', _ingest_time,
                 'original_time', CAST(created_at_ms AS STRING)
             ) as metadata""",

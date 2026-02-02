@@ -35,7 +35,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 
 **Findings (UID 2)**: Detection Finding (2004), Security Finding (2001), Vulnerability Finding (2002), Compliance Finding (2003), Incident Finding (2005)
 
-**Identity & Access Management (UID 3)**: Account Change (3001), Authentication (3002), Authorize Session (3003), Entity Management (3004), User Access Management (3005), Group Management (3006)
+**Identity & Access Management (UID 3)**: Account Change (3001), Authentication (3002), Authorize Session (3003), Entity Management (3004), User Access (3005), Group Management (3006)
 
 **Network Activity (UID 4)**: Network Activity (4001), HTTP Activity (4002), DNS Activity (4003), Email Activity (4009), SSH Activity (4007)
 
@@ -57,7 +57,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 | **Authentication** | 3002 | Login/logout events | actor, src_endpoint, status_id |
 | **Authorize Session** | 3003 | Permission/access grants | actor, resource, privileges |
 | **Entity Management** | 3004 | Workspace/project lifecycle | actor, resource, activity_id |
-| **User Access Management** | 3005 | Permission changes | actor, user, resource |
+| **User Access** | 3005 | Permission changes | actor, user, resource |
 | **Group Management** | 3006 | Team/group operations | actor, group, user |
 
 **Architecture**: Multiple sources → 6 unified OCSF tables (one per event class)
@@ -117,7 +117,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 - [Authentication (3002)](https://schema.ocsf.io/1.7.0/classes/authentication) - Login/logout (requires `src_endpoint`)
 - [Authorize Session (3003)](https://schema.ocsf.io/1.7.0/classes/authorize_session) - Authorization (requires `resource`)
 - [Entity Management (3004)](https://schema.ocsf.io/1.7.0/classes/entity_management) - Resource lifecycle (requires `resource`)
-- [User Access Management (3005)](https://schema.ocsf.io/1.7.0/classes/user_access_management) - Permissions (requires `user`, `resource`)
+- [User Access (3005)](https://schema.ocsf.io/1.7.0/classes/user_access) - Permissions (requires `user`, `resource`)
 - [Group Management (3006)](https://schema.ocsf.io/1.7.0/classes/group_management) - Groups (requires `group`)
 
 **Implementation Note**: Keep core OCSF fields consistent (category_uid, class_uid, activity_id, severity_id, time, actor). Delta Lake handles schema evolution for source-specific fields.
@@ -132,7 +132,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 | **Account Change (3001)** | `user.*`, `org.add_member`, `org.remove_member` | User lifecycle and org membership changes |
 | **Authentication (3002)** | `oauth_authorization.*` | OAuth app authorizations (login proxy) |
 | **Authorize Session (3003)** | `repo.add_member`, `repo.update_member`, `protected_branch.*` | Repository access and branch protection |
-| **User Access Management (3005)** | `repo.add_member`, `repo.update_member` | Permission grants/changes on repositories |
+| **User Access (3005)** | `repo.add_member`, `repo.update_member` | Permission grants/changes on repositories |
 | **Group Management (3006)** | `team.add_member`, `team.remove_member`, `team.*` | Team creation and membership |
 
 ### Slack Actions
@@ -141,7 +141,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 | **Account Change (3001)** | `user_login`, `user_created`, `user_deactivated`, `user_role_changed` | User lifecycle and role changes |
 | **Authentication (3002)** | `user_login`, `user_logout` | Login/logout events |
 | **Authorize Session (3003)** | `workspace_sso_enabled`, `channel_posting_permissions_updated` | Workspace access controls |
-| **User Access Management (3005)** | `guest_invited`, `user_permissions_assigned` | Guest access and permissions |
+| **User Access (3005)** | `guest_invited`, `user_permissions_assigned` | Guest access and permissions |
 | **Group Management (3006)** | `usergroup_created`, `usergroup_member_added`, `channel_archive` | User groups and channels |
 
 ### Atlassian Actions
@@ -151,7 +151,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 | **Authentication (3002)** | `user.login`, `user.login_failed`, `user.password_changed` | Authentication events |
 | **Authorize Session (3003)** | `domain.verified`, `ip_allowlist.updated`, `session.terminated` | Access controls and session management |
 | **Entity Management (3004)** | `workspace.created`, `project.created`, `integration.installed` | Resource/entity lifecycle |
-| **User Access Management (3005)** | `permission.granted`, `role.assigned`, `product.access_granted` | Permission and role assignments |
+| **User Access (3005)** | `permission.granted`, `role.assigned`, `product.access_granted` | Permission and role assignments |
 | **Group Management (3006)** | `group.created`, `group.member_added`, `group.member_removed` | Group lifecycle and membership |
 
 **Pattern**: Actions are mapped based on **intent** (what changed) not just naming:
@@ -159,7 +159,7 @@ OCSF organizes events into **categories**. This project uses **Category 3 (IAM)*
 - **Authentication** = Identity verification (login/logout)
 - **Authorize Session** = Access control decisions
 - **Entity Management** = Resource/workspace lifecycle
-- **User Access Management** = Permission grants/changes
+- **User Access** = Permission grants/changes
 - **Group Management** = Group/team operations
 
 See [transformation files](../transformations/mappings/ocsf/iam/) for complete action regex patterns and mapping logic.
