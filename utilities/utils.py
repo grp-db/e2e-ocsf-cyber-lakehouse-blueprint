@@ -1,5 +1,8 @@
 """
 Configuration module for E2E Cybersecurity Lakehouse Pipeline
+
+Databricks Cyber Accelerator - Built by Databricks Professional Services
+
 Centralizes file paths, table names, and other constants
 """
 

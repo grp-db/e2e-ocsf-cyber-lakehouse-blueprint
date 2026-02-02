@@ -1,5 +1,7 @@
 # E2E OCSF Cyber Lakehouse Blueprint
 
+> **Databricks Cyber Accelerator** - Built by Databricks Professional Services to accelerate cybersecurity lakehouse implementations for customers
+
 **Medallion Architecture** (Bronze → Silver → Gold) that transforms audit logs from GitHub, Slack, and Atlassian into **OCSF 1.7.0 IAM-normalized** security events.
 
 ## 🎯 What This Does
@@ -110,3 +112,9 @@ e2e-ocsf-cyber-lakehouse-blueprint/
 ---
 
 **Tech Stack Built with 💜**: OCSF v1.7.0 📖 • Databricks 🚀 • Spark Declarative Pipelines 🧠 • Spark Streaming 🌊 • Auto Loader ⚓ • Delta Lake 🏞️ • Unity Catalog 📚
+
+---
+
+## 📝 About This Accelerator
+
+This is a **Databricks Cyber Accelerator** built by Databricks Professional Services to help customers rapidly implement OCSF-normalized security data pipelines on the Databricks platform. Customers are encouraged to clone, modify, and extend this solution to meet their specific requirements.

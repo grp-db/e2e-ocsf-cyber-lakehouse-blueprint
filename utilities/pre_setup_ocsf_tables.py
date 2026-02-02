@@ -1,6 +1,8 @@
 """
 Pre-Pipeline Setup Script
 
+Databricks Cyber Accelerator - Built by Databricks Professional Services
+
 Run this notebook/script BEFORE your first SDP pipeline run to:
 1. Create all required databases (github, slack, atlassian, ocsf)
 2. Create OCSF Gold tables with minimal schema (time column only)

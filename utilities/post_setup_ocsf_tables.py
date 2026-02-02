@@ -1,6 +1,8 @@
 """
 OCSF Tables Post-Pipeline Setup Script
 
+Databricks Cyber Accelerator - Built by Databricks Professional Services
+
 Run this notebook/script AFTER your first SDP pipeline run to:
 1. Add liquid clustering to OCSF tables for query optimization
 

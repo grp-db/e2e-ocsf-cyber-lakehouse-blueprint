@@ -1,6 +1,8 @@
 """
 OCSF IAM Gold Layer - Unified Audit Logs
 
+Databricks Cyber Accelerator - Built by Databricks Professional Services
+
 This file creates 6 UNIFIED OCSF IAM tables (Gold layer) by combining data from 
 GitHub, Slack, and Atlassian Silver tables using Spark Declarative Pipelines.
 
