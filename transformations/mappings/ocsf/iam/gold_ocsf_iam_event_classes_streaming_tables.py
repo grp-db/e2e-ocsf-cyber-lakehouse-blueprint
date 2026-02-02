@@ -14,12 +14,12 @@ OCSF Event Classes (IAM Category UID 3) - Source Coverage:
 2. Authentication (3002) - GitHub ✅, Slack ✅, Atlassian ✅
 3. Authorize Session (3003) - GitHub ✅, Slack ✅, Atlassian ✅
 4. Entity Management (3004) - Atlassian ONLY ✅
-5. User Access Management (3005) - GitHub ✅, Slack ✅
+5. User Access (3005) - GitHub ✅, Slack ✅
 6. Group Management (3006) - GitHub ✅, Slack ✅, Atlassian ✅
 
 Notes:
 - Entity Management (3004): Only Atlassian contributes (workspace/project/webhook lifecycle)
-- User Access Management (3005): GitHub and Slack only (Atlassian permissions → Authorize Session)
+- User Access (3005): GitHub and Slack only (Atlassian permissions → Authorize Session)
 - Total append flows: 15 (5 GitHub + 5 Slack + 5 Atlassian)
 """
 
@@ -111,10 +111,10 @@ sdp.create_streaming_table(
     }
 )
 
-# OCSF Schema: https://schema.ocsf.io/1.3.0/classes/user_access_management?extensions=
+# OCSF Schema: https://schema.ocsf.io/1.7.0/classes/user_access?extensions=
 sdp.create_streaming_table(
-    OCSF_TABLES["user_access_management"],
-    comment=f"OCSF {OCSF_VERSION} {OCSF_CATEGORY_NAME} - User Access Management ({OCSF_CLASS_UIDS['user_access_management']}) - Unified from GitHub, Slack",
+    OCSF_TABLES["user_access"],
+    comment=f"OCSF {OCSF_VERSION} {OCSF_CATEGORY_NAME} - User Access ({OCSF_CLASS_UIDS['user_access']}) - Unified from GitHub, Slack",
     cluster_by=["_event_date"],
     table_properties={
         "delta.autoOptimize.optimizeWrite": "true",
@@ -172,9 +172,9 @@ def github_group_management():
     )
 
 
-@sdp.append_flow(target=OCSF_TABLES["user_access_management"])
-def github_user_access_management():
-    """GitHub org member management → User Access Management (3005)"""
+@sdp.append_flow(target=OCSF_TABLES["user_access"])
+def github_user_access():
+    """GitHub org member management → User Access (3005)"""
     return transform_github_to_user_access_management(
         spark.readStream.table(f"{CATALOG}.{DATABASES['github']}.{SILVER_TABLES['github']}")
     )
@@ -214,9 +214,9 @@ def slack_group_management():
     )
 
 
-@sdp.append_flow(target=OCSF_TABLES["user_access_management"])
-def slack_user_access_management():
-    """Slack app/guest access → User Access Management (3005)"""
+@sdp.append_flow(target=OCSF_TABLES["user_access"])
+def slack_user_access():
+    """Slack app/guest access → User Access (3005)"""
     return transform_slack_to_user_access_management(
         spark.readStream.table(f"{CATALOG}.{DATABASES['slack']}.{SILVER_TABLES['slack']}")
     )

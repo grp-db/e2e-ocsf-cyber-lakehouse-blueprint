@@ -37,7 +37,7 @@ OCSF_TABLES = {
     "authentication": "ocsf_iam_authentication",
     "authorize_session": "ocsf_iam_authorize_session",
     "entity_management": "ocsf_iam_entity_management",
-    "user_access_management": "ocsf_iam_user_access_management",
+    "user_access": "ocsf_iam_user_access",
     "group_management": "ocsf_iam_group_management"
 }
 
@@ -54,10 +54,10 @@ OCSF_CLASS_UIDS = {
     "authentication": 3002,
     "authorize_session": 3003,
     "entity_management": 3004,
-    "user_access_management": 3005,
+    "user_access": 3005,
     "group_management": 3006
 }
 
 OCSF_CATEGORY_UID = 3
 OCSF_CATEGORY_NAME = "Identity & Access Management"
-OCSF_VERSION = "1.1.0"
+OCSF_VERSION = "1.7.0"
